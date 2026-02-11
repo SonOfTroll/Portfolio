@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-    title: 'Kishan Pandey — Cybersecurity Specialist',
-    description: 'Defensive Security // Linux Systems // CTF Player. Portfolio of Kishan Pandey, a cybersecurity student from Dehradun, India.',
+    title: 'Kishan Pandey',
+    description: 'Security // Linux Systems // CTF Player. Portfolio of Kishan Pandey, a cybersecurity student from Delhi-NCR, India.',
     keywords: ['cybersecurity', 'CTF', 'Linux', 'portfolio', 'Kishan Pandey', 'security'],
     authors: [{ name: 'Kishan Pandey' }],
     openGraph: {
