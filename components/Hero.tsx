@@ -12,28 +12,28 @@ export default function Hero() {
     const tiltRef = useRef<HTMLDivElement>(null)
 
     // ═══ 3D Holographic Tilt ═══
-    const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        if (!tiltRef.current) return
-        const rect = tiltRef.current.getBoundingClientRect()
-        const x = (e.clientX - rect.left) / rect.width - 0.5
-        const y = (e.clientY - rect.top) / rect.height - 0.5
+    useEffect(() => {
+        const handleGlobalMouseMove = (e: MouseEvent) => {
+            if (!tiltRef.current) return
 
-        tiltRef.current.style.transform = `
-            perspective(1000px)
-            rotateY(${x * 20}deg)
-            rotateX(${-y * 20}deg)
-            scale3d(1.03, 1.03, 1.03)
-        `
-    }, [])
+            const x = (e.clientX / window.innerWidth) - 0.5
+            const y = (e.clientY / window.innerHeight) - 0.5
 
-    const handleMouseLeave = useCallback(() => {
-        if (!tiltRef.current) return
-        tiltRef.current.style.transform = `
-            perspective(1000px)
-            rotateY(0deg)
-            rotateX(0deg)
-            scale3d(1, 1, 1)
-        `
+            gsap.to(tiltRef.current, {
+                transform: `
+                    perspective(1000px) 
+                    rotateY(${x * 30}deg) 
+                    rotateX(${-y * 30}deg) 
+                    scale3d(1.03, 1.03, 1.03)
+                `,
+                duration: 1.5,
+                ease: 'power2.out',
+                overwrite: 'auto'
+            })
+        }
+
+        window.addEventListener('mousemove', handleGlobalMouseMove)
+        return () => window.removeEventListener('mousemove', handleGlobalMouseMove)
     }, [])
 
     useEffect(() => {
@@ -87,10 +87,7 @@ export default function Hero() {
             {/* 3D Tilt Container */}
             <div
                 ref={tiltRef}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
                 style={{
-                    transition: 'transform 0.15s ease-out',
                     transformStyle: 'preserve-3d',
                     willChange: 'transform',
                 }}
