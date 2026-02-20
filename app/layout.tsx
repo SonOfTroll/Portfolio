@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     keywords: ['cybersecurity', 'CTF', 'Linux', 'portfolio', 'Kishan Pandey', 'security'],
     authors: [{ name: 'Kishan Pandey' }],
     openGraph: {
-        title: 'Kishan Pandey — Cybersecurity Specialist',
+        title: 'Kishan Pandey',
         description: 'Defensive Security // Linux Systems // CTF Player',
         type: 'website',
     },
