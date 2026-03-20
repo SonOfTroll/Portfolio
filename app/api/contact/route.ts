@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
         // Build clean Telegram message
         const text =
-            `📩 *PORTFOLIO MSG* 📩\n\n` +
+            `A nigga just want to talk you\n\n` +
             `👤 ${safeSender}\n\n` +
             `${safeMessage}`;
 
