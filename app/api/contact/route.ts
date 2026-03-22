@@ -31,7 +31,7 @@ export async function POST(req: Request) {
         const text =
             `A nigga just want to talk you\n\n` +
             `👤 ${safeSender}\n\n` +
-            `${safeMessage}`;
+            `Message ${safeMessage}`;
 
         const tgRes = await fetch(
             `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
