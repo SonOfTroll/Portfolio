@@ -16,8 +16,8 @@ const config: Config = {
                 'void-light': '#111111',
             },
             fontFamily: {
-                sans: ['Space Grotesk', 'system-ui', 'sans-serif'],
-                mono: ['JetBrains Mono', 'monospace'],
+                sans: ['var(--font-space-grotesk)', 'system-ui', 'sans-serif'],
+                mono: ['var(--font-jetbrains-mono)', 'monospace'],
             },
             backdropBlur: {
                 '3xl': '64px',

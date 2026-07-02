@@ -33,14 +33,18 @@ export async function GET() {
     });
 
     const data = await res.json();
-    const user = data.data.matchedUser;
+    const user = data?.data?.matchedUser;
 
-    const stats = user.submitStatsGlobal.acSubmissionNum;
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const stats = user.submitStatsGlobal?.acSubmissionNum ?? [];
     const totalSolved = stats.find((s: any) => s.difficulty === 'All')?.count || 0;
     const easySolved = stats.find((s: any) => s.difficulty === 'Easy')?.count || 0;
     const mediumSolved = stats.find((s: any) => s.difficulty === 'Medium')?.count || 0;
     const hardSolved = stats.find((s: any) => s.difficulty === 'Hard')?.count || 0;
-    const ranking = user.profile.ranking;
+    const ranking = user.profile?.ranking ?? null;
 
     return NextResponse.json({
       username: user.username,
@@ -57,7 +61,7 @@ export async function GET() {
       easySolved: 0,
       mediumSolved: 0,
       hardSolved: 0,
-      ranking: 0,
+      ranking: null,
     });
   }
 }

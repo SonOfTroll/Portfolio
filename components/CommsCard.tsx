@@ -60,10 +60,10 @@ export default function CommsCard() {
             </div>
 
             <div className="flex flex-col md:flex-row gap-6 items-center">
-                {/* Minimalist Dehradun Map */}
+                {/* Minimalist Delhi NCR Map */}
                 <div className="flex-1 min-w-0 relative">
                     <svg viewBox="0 0 200 120" className="w-full h-auto opacity-30">
-                        {/* Simplified Dehradun terrain */}
+                        {/* Simplified Delhi NCR terrain */}
                         <defs>
                             <linearGradient id="mapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" stopColor="rgba(255,255,255,0.1)" />

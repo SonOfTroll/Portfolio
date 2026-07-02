@@ -54,17 +54,17 @@ function ProceduralEnvironment() {
 function useScrollOffset() {
     const ref = useRef(0)
 
-    if (typeof window !== 'undefined') {
+    useEffect(() => {
+        let frame = 0
         const update = () => {
             const scrollY = window.scrollY
             const maxScroll = document.documentElement.scrollHeight - window.innerHeight
             ref.current = maxScroll > 0 ? scrollY / maxScroll : 0
+            frame = requestAnimationFrame(update)
         }
-        requestAnimationFrame(function loop() {
-            update()
-            requestAnimationFrame(loop)
-        })
-    }
+        frame = requestAnimationFrame(update)
+        return () => cancelAnimationFrame(frame)
+    }, [])
 
     return ref
 }

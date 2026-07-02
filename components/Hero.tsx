@@ -42,6 +42,10 @@ export default function Hero() {
         const chars = titleRef.current.querySelectorAll('.hero-char')
         const nameChars = NAME.split('')
 
+        // Track every timer so we can clean up on unmount
+        const intervals: ReturnType<typeof setInterval>[] = []
+        const timeouts: ReturnType<typeof setTimeout>[] = []
+
         // Set initial random chars
         chars.forEach((char) => {
             if ((char as HTMLElement).dataset.final !== ' ') {
@@ -49,29 +53,30 @@ export default function Hero() {
             }
         })
 
-        // Decrypt animation — each char resolves with staggered delay
+        // Decrypt animation — each char resolves with a staggered start delay
         chars.forEach((char, i) => {
             const finalChar = nameChars[i]
             if (finalChar === ' ') return
 
-            const delay = i * 0.08
-            let iterations = 0
+            const delay = i * 80 // ms — left-to-right stagger
             const maxIterations = 8 + Math.floor(Math.random() * 6)
 
-            const interval = setInterval(() => {
-                if (iterations >= maxIterations) {
-                    char.textContent = finalChar
-                    clearInterval(interval)
-                    // Green flash on lock-in
-                    gsap.fromTo(char, { color: '#00ff41' }, { color: 'rgba(255,255,255,0.95)', duration: 0.6 })
-                    return
-                }
-                char.textContent = CHARS[Math.floor(Math.random() * CHARS.length)]
-                iterations++
-            }, 50)
-
-            // Delay start
-            setTimeout(() => { }, delay * 1000)
+            const startTimeout = setTimeout(() => {
+                let iterations = 0
+                const interval = setInterval(() => {
+                    if (iterations >= maxIterations) {
+                        char.textContent = finalChar
+                        clearInterval(interval)
+                        // Green flash on lock-in
+                        gsap.fromTo(char, { color: '#00ff41' }, { color: 'rgba(255,255,255,0.95)', duration: 0.6 })
+                        return
+                    }
+                    char.textContent = CHARS[Math.floor(Math.random() * CHARS.length)]
+                    iterations++
+                }, 50)
+                intervals.push(interval)
+            }, delay)
+            timeouts.push(startTimeout)
         })
 
         // Subtext fade in
@@ -80,6 +85,11 @@ export default function Hero() {
             { opacity: 0, y: 30 },
             { opacity: 1, y: 0, duration: 1.2, delay: 1.5, ease: 'power3.out' }
         )
+
+        return () => {
+            intervals.forEach(clearInterval)
+            timeouts.forEach(clearTimeout)
+        }
     }, [])
 
     return (
@@ -95,8 +105,7 @@ export default function Hero() {
                 {/* Massive Typography — NO WRAPPING */}
                 <h1
                     ref={titleRef}
-                    className="text-[clamp(3rem,10vw,15rem)] whitespace-nowrap leading-none font-black mix-blend-overlay select-none text-center"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                    className="text-[clamp(3rem,10vw,15rem)] whitespace-nowrap leading-none font-black font-sans mix-blend-overlay select-none text-center"
                 >
                     {NAME.split('').map((char, i) => (
                         <span
@@ -117,8 +126,8 @@ export default function Hero() {
             {/* Subtext */}
             <p
                 ref={subtextRef}
-                className="mt-8 text-sm md:text-base tracking-[0.3em] uppercase opacity-0"
-                style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgba(255,255,255,0.5)' }}
+                className="mt-8 text-sm md:text-base tracking-[0.3em] uppercase opacity-0 font-mono"
+                style={{ color: 'rgba(255,255,255,0.5)' }}
             >
                 Defensive Security <span className="text-cyber-green mx-2">{'// '}</span>Linux Systems{' '}
                 <span className="text-cyber-green mx-2">{'// '}</span>CTF Player

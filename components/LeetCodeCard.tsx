@@ -9,7 +9,7 @@ interface LeetCodeStats {
     easySolved: number
     mediumSolved: number
     hardSolved: number
-    ranking: number
+    ranking: number | null
 }
 
 function RadialProgress({ value, max, label }: { value: number; max: number; label: string }) {

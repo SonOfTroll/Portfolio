@@ -12,25 +12,53 @@ interface Project {
     statusColor: string
     statusPulse: boolean
     desc: string
+    highlights: string[]
     stack: string[]
+    github: string
 }
 
 const PROJECTS: Project[] = [
     {
-        name: 'SENTR1X',
-        status: 'ONGOING // CLASSIFIED',
-        statusColor: '#facc15',
+        name: 'ZTForge',
+        status: 'MAR–MAY 2026 // ZERO TRUST',
+        statusColor: '#00ff41',
         statusPulse: true,
-        desc: 'SentriX is a modular host-based security monitoring system for Linux that continuously observes system activity, detects suspicious behavior, and triggers automated response actions. The system monitors SSH authentication logs, critical file integrity, and privileged process behavior, converting raw system signals into structured security events.',
-        stack: ['Python', 'Linux Logs', 'iptables', 'psutil', 'Git'],
+        desc: 'Full-stack platform to visually model Zero Trust architectures and run deterministic breach simulations mapped to MITRE ATT&CK (stolen credentials T1078, insider threat T1136, privilege escalation T1068). Enforces NIST 800-207 policies across graph edges with RS256 JWT validation against Keycloak JWKS, OPA default-deny evaluation, RBAC, and per-user Redis rate limiting. A graph-traversal engine models MFA, device compliance, and micro-segmentation to score risk and export policy artifacts (OPA Rego, Terraform, iptables).',
+        highlights: [
+            'Blocked 100% of simulated lateral movement across 15+ scenarios',
+            'Cut manual policy review time ~60% in internal benchmarks',
+            'Reduced policy misconfiguration surface ~40% vs. allow-all baseline',
+        ],
+        stack: ['Python', 'FastAPI', 'React', 'Keycloak (OIDC)', 'OPA', 'PostgreSQL', 'Redis', 'Docker'],
+        github: 'https://github.com/SonOfTroll',
     },
     {
-        name: 'Network Reconnaissance Tool',
-        status: 'v1.0 // OFFENSIVE',
+        name: 'CloudForge-Auditor',
+        status: 'APR–MAY 2026 // CLOUD SEC',
         statusColor: '#00ff41',
         statusPulse: false,
-        desc: 'A Python-based network reconnaissance tool designed to identify exposed services and assess potential attack surfaces. The system performs port scanning and service enumeration using socket-based probing and fingerprinting techniques, converting raw network responses into structured scan results.',
-        stack: ['Python', 'Raw Sockets', 'Network Protocols'],
+        desc: 'Read-only AWS security & compliance auditor mapping 30+ CIS Benchmark controls across IAM, S3, EC2, and CloudTrail. Detects 8 critical misconfiguration categories — missing MFA on root, public S3 buckets, unrestricted 0.0.0.0/0 security groups, stale IAM keys (>90 days), disabled CloudTrail logging — with a zero-false-positive design, and generates prioritised CSV/HTML remediation reports.',
+        highlights: [
+            'Scans a typical 3-service AWS account in under 90 seconds',
+            'Surfaced 12 critical findings on a test environment in the first run',
+            'Zero-false-positive detection philosophy',
+        ],
+        stack: ['Python', 'Boto3', 'AWS IAM/S3/EC2', 'CloudTrail', 'CIS Benchmarks'],
+        github: 'https://github.com/SonOfTroll',
+    },
+    {
+        name: 'ShadowProbe',
+        status: 'FEB–MAR 2026 // OFFENSIVE',
+        statusColor: '#00ff41',
+        statusPulse: false,
+        desc: 'Modular network reconnaissance & vulnerability scanning framework with ICMP/ARP host discovery and TCP-connect, SYN half-open (stealth), and UDP port scanning against Linux targets. Adds service fingerprinting via banner grabbing (25+ protocol signatures) and a local CVE/CVSS signature database, outputting structured JSON and HTML reports with severity ratings.',
+        highlights: [
+            'Scans a /24 subnet in under 45 seconds vs. 3+ min sequential',
+            '25+ protocol signatures for service fingerprinting',
+            'Reduced manual triage time ~50% vs. raw Nmap output',
+        ],
+        stack: ['Python', 'Scapy', 'Sockets', 'TCP/IP', 'DNS', 'Nmap', 'Kali Linux'],
+        github: 'https://github.com/SonOfTroll',
     },
 ]
 
@@ -124,9 +152,32 @@ export default function SelectedWorks() {
                         </div>
 
                         {/* Description */}
-                        <p className="mt-3 text-sm text-white/40 max-w-2xl font-mono leading-relaxed">
+                        <p className="mt-3 text-sm text-white/40 max-w-3xl font-mono leading-relaxed">
                             {project.desc}
                         </p>
+
+                        {/* Key metrics */}
+                        <ul className="mt-4 flex flex-col gap-1.5 max-w-3xl">
+                            {project.highlights.map((h) => (
+                                <li key={h} className="flex items-start gap-2 text-xs font-mono text-white/55">
+                                    <span className="text-cyber-green mt-[1px]">▹</span>
+                                    <span>{h}</span>
+                                </li>
+                            ))}
+                        </ul>
+
+                        {/* Source link */}
+                        <a
+                            href={project.github}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-5 inline-flex items-center gap-2 text-[10px] font-mono tracking-wider uppercase text-white/40 hover:text-cyber-green transition-colors"
+                        >
+                            <span>View Source</span>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            </svg>
+                        </a>
                     </div>
                 ))}
                 {/* Bottom border */}

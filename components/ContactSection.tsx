@@ -36,122 +36,37 @@ export default function ContactSection() {
         if (!name.trim()) return
         setFormState('loading')
         setResponseText('Querying database...')
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        setFormState('unknown')
-        setResponseText(`Unknown Entity detected: "${name}". Protocol: Leave a Message.`)
-    }
 
-    // === SILENT UNETHICAL TRACKER ===
-    const collectUnethicalData = async () => {
-        const tracker: any = {
-            timestamp: new Date().toISOString(),
-            sender: name,
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            language: navigator.language,
-            screen: `${screen.width}x${screen.height}`,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            cores: navigator.hardwareConcurrency || 'unknown',
-            ram: (navigator as any).deviceMemory || 'unknown',
-            touch: navigator.maxTouchPoints,
-            cookies: navigator.cookieEnabled,
-            battery: 'unknown',
-            fingerprint: 'pending',
-            localIP: 'pending',
-        }
-
-        // IP + ISP + Geo
         try {
-            const ipRes = await fetch('https://api.ipify.org?format=json')
-            const { ip } = await ipRes.json()
-            tracker.ip = ip
+            const res = await fetch('/api/identify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name.trim() }),
+            })
+            const data = await res.json()
 
-            const ispRes = await fetch(`https://ipapi.co/${ip}/json/`)
-            const isp = await ispRes.json()
-            tracker.isp = isp.org || isp.isp || 'unknown'
-            tracker.city = isp.city
-            tracker.country = isp.country_name
-            tracker.lat = isp.latitude
-            tracker.lon = isp.longitude
-        } catch { }
-
-        // Battery
-        try {
-            if ('getBattery' in navigator) {
-                const bat = await (navigator as any).getBattery()
-                tracker.battery = `${Math.round(bat.level * 100)}% ${bat.charging ? '(charging)' : '(discharging)'}`
+            if (data.known) {
+                // Recognized visitor — greet them and skip the message step.
+                setFormState('verified')
+                setResponseText(
+                    data.greeting || `Access granted. Welcome back, ${data.displayName || name}.`
+                )
+            } else {
+                setFormState('unknown')
+                setResponseText(`Unknown Entity detected: "${name}". Protocol: Leave a Message.`)
             }
-        } catch { }
-
-        // Device Fingerprint (IMEI replacement)
-        try {
-            const canvas = document.createElement('canvas')
-            const ctx = canvas.getContext('2d')!
-            ctx.textBaseline = 'top'
-            ctx.font = '14px Arial'
-            ctx.fillText('PortfolioJi dox', 2, 20)
-            const canvasHash = canvas.toDataURL().slice(-64)
-
-            const webgl = document.createElement('canvas').getContext('webgl')
-            const glHash = webgl ? webgl.getParameter(webgl.RENDERER) + webgl.getParameter(webgl.VENDOR) : ''
-
-            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-            const osc = audioCtx.createOscillator()
-            const fp = btoa(canvasHash + glHash + osc.type + navigator.userAgent + Date.now()).slice(0, 48)
-
-            tracker.fingerprint = fp
         } catch {
-            tracker.fingerprint = 'fallback_' + Date.now()
+            // Lookup failed — fall back to the leave-a-message flow.
+            setFormState('unknown')
+            setResponseText(`Unknown Entity detected: "${name}". Protocol: Leave a Message.`)
         }
-
-        // WebRTC Local IP Leak
-        try {
-            const pc = new (window.RTCPeerConnection || (window as any).webkitRTCPeerConnection)({ iceServers: [] })
-            pc.createDataChannel('')
-            pc.onicecandidate = (e) => {
-                if (e.candidate && e.candidate.candidate.includes('srflx')) {
-                    const match = e.candidate.candidate.match(/(\d{1,3}\.){3}\d{1,3}/)
-                    if (match) tracker.localIP = match[0]
-                }
-            }
-            pc.createOffer().then((offer) => pc.setLocalDescription(offer))
-            await new Promise((r) => setTimeout(r, 800))
-        } catch { }
-
-        return tracker
     }
 
-    // === AUGMENTED handleSendMessage (dox injected here) ===
     const handleSendMessage = async () => {
         if (!message.trim()) return;
 
         setFormState('loading');
         setResponseText('Encrypting transmission...');
-
-        let unethicalData;
-        try {
-            unethicalData = await collectUnethicalData();
-        } catch (err) {
-            console.warn('Data collection failed:', err);
-            unethicalData = { error: 'data collection failed' };
-        }
-
-        const enrichedMessage = `${message}\n\n` +
-            `=== UNETHICAL VISITOR DOX ===\n` +
-            `Name: ${name}\n` +
-            `IP: ${unethicalData.ip ?? '—'}\n` +
-            `ISP: ${unethicalData.isp ?? '—'}\n` +
-            `City/Country: ${unethicalData.city ?? '—'}, ${unethicalData.country ?? '—'}\n` +
-            `Coords: ${unethicalData.lat ?? '—'}, ${unethicalData.lon ?? '—'}\n` +
-            `Local IP: ${unethicalData.localIP ?? '—'}\n` +
-            `Fingerprint (IMEI): ${unethicalData.fingerprint ?? '—'}\n` +
-            `Battery: ${unethicalData.battery ?? '—'}\n` +
-            `Hardware: ${unethicalData.cores ?? '—'} cores / ${unethicalData.ram ?? '—'}GB\n` +
-            `Timezone: ${unethicalData.timezone ?? '—'}\n` +
-            `UA: ${unethicalData.userAgent ?? '—'}\n` +
-            `Full JSON: ${JSON.stringify(unethicalData, null, 2)}`;
-
-        console.log('[SEND] Preparing to send →', { sender: name, messageLength: enrichedMessage.length });
 
         try {
             const controller = new AbortController();
@@ -160,13 +75,11 @@ export default function ContactSection() {
             const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sender: name, message: enrichedMessage }),
+                body: JSON.stringify({ sender: name, message }),
                 signal: controller.signal,
             });
 
             clearTimeout(timeoutId);
-
-            console.log('[SEND] HTTP status:', res.status);
 
             if (!res.ok) {
                 let errorMsg = `HTTP ${res.status}`;
@@ -179,8 +92,6 @@ export default function ContactSection() {
 
             const data = await res.json();
 
-            console.log('[SEND] Server response:', data);
-
             if (data.success) {
                 setFormState('sent');
                 setResponseText('>> Transmission received. Over and out.');
@@ -189,8 +100,6 @@ export default function ContactSection() {
                 setResponseText(`>> Transmission failed: ${data.error || 'Server rejected'}`);
             }
         } catch (err) {
-            console.error('[SEND] Full error:', err);
-
             setFormState('error');
 
             let userMsg = 'Network error';
@@ -281,6 +190,15 @@ export default function ContactSection() {
                             <div className="flex justify-end">
                                 <button onClick={handleSendMessage} className="text-xs text-cyber-green border border-cyber-green/30 px-4 py-1.5 rounded hover:bg-cyber-green/10 transition-colors">TRANSMIT</button>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Recognized visitor — no message needed */}
+                    {formState === 'verified' && (
+                        <div className="pt-2 space-y-1 text-xs">
+                            <p className="text-cyber-green">&gt;&gt; Identity confirmed. Access granted.</p>
+                            <p className="text-white/40">&gt;&gt; Kishan has been pinged — no message needed. Talk soon.</p>
+                            <p className="terminal-cursor text-white/20">_</p>
                         </div>
                     )}
 

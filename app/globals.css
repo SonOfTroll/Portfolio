@@ -28,7 +28,7 @@ html {
 body {
   background: var(--void);
   color: rgba(255, 255, 255, 0.9);
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -273,6 +273,31 @@ body {
 
 .section-reveal {
   animation: section-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ═══════════════════════════════════════════════
+   REDUCED MOTION — respect user OS preference
+   ═══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .vinyl-spin,
+  .waveform-bar,
+  .status-pulse,
+  .marquee-track {
+    animation: none !important;
+  }
 }
 
 /* ═══ Noise Overlay (subtle grain) ═══ */
