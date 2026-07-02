@@ -37,10 +37,7 @@ export async function POST(req: Request) {
         }
 
         // Known contact — ping Telegram right away.
-        const ping =
-            `🔓 *Known contact detected*\n\n` +
-            `👤 ${escapeMarkdownV2(data.name)} just opened the portfolio\\.\n` +
-            `They typed: "${escapeMarkdownV2(name)}"`;
+        const ping = `👤 ${escapeMarkdownV2(data.name)} opened portfolio`;
 
         await sendTelegram(ping, 'MarkdownV2');
 

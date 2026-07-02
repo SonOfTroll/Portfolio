@@ -193,11 +193,9 @@ export default function ContactSection() {
                         </div>
                     )}
 
-                    {/* Recognized visitor — no message needed */}
+                    {/* Recognized visitor — only the custom greeting is shown (above) */}
                     {formState === 'verified' && (
-                        <div className="pt-2 space-y-1 text-xs">
-                            <p className="text-cyber-green">&gt;&gt; Identity confirmed. Access granted.</p>
-                            <p className="text-white/40">&gt;&gt; Kishan has been pinged — no message needed. Talk soon.</p>
+                        <div className="pt-1 text-xs">
                             <p className="terminal-cursor text-white/20">_</p>
                         </div>
                     )}
