@@ -4,21 +4,21 @@ import { telegramConfigured } from '@/lib/telegram';
 
 export const dynamic = 'force-dynamic';
 
-// Safe diagnostic endpoint — reports whether things are wired up correctly.
-// It NEVER returns secret values, only booleans / key *type* / row counts.
+// Safe diagnostic endpoint. The Supabase URL is NOT secret (it's in every
+// browser request), so we echo it to spot a malformed value. The key is only
+// ever reported by *type*, never its value.
 export async function GET() {
-    const rawKey =
-        process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const rawUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const normalizedUrl = rawUrl.trim().replace(/\/+$/, '');
+    const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-    // Figure out what *kind* of key was pasted, without revealing it.
-    let keyLooksLike: string = 'not set';
+    let keyLooksLike = 'not set';
     if (rawKey.startsWith('sb_secret_')) keyLooksLike = 'secret ✅ (correct)';
     else if (rawKey.startsWith('sb_publishable_')) keyLooksLike = 'PUBLISHABLE ❌ (wrong — use the secret key)';
     else if (rawKey.startsWith('eyJ')) {
-        // Legacy JWT key — decode only the role claim (not a secret).
         try {
             const payload = JSON.parse(Buffer.from(rawKey.split('.')[1], 'base64').toString());
-            keyLooksLike = `legacy JWT, role="${payload.role}" ${payload.role === 'service_role' ? '✅' : '❌ (use service_role, not anon)'}`;
+            keyLooksLike = `legacy JWT, role="${payload.role}"`;
         } catch {
             keyLooksLike = 'legacy JWT (could not decode)';
         }
@@ -27,32 +27,46 @@ export async function GET() {
     }
 
     const result: Record<string, unknown> = {
-        supabaseUrlSet: Boolean(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL),
-        supabaseKeySet: Boolean(rawKey),
+        version: 'health-v2',
+        supabaseUrl_asStored: rawUrl,
+        supabaseUrl_normalized: normalizedUrl,
+        urlHasTrailingSlash: rawUrl !== rawUrl.replace(/\/+$/, ''),
+        urlLooksValid: /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(normalizedUrl),
         keyLooksLike,
+        keyPrefix: rawKey ? rawKey.slice(0, 10) + '…' : 'none',
         telegramConfigured: telegramConfigured(),
     };
 
-    const supabase = getSupabase();
-    if (!supabase) {
-        result.query = 'skipped — Supabase client not configured (URL or key missing)';
-        return NextResponse.json(result);
+    // Direct REST probe (bypasses supabase-js) to see the raw gateway response.
+    if (normalizedUrl && rawKey) {
+        try {
+            const probeUrl = `${normalizedUrl}/rest/v1/known_people?select=name&limit=5`;
+            const res = await fetch(probeUrl, {
+                headers: { apikey: rawKey.trim(), Authorization: `Bearer ${rawKey.trim()}` },
+                cache: 'no-store',
+            });
+            const body = await res.text();
+            result.directProbe = {
+                url: probeUrl,
+                status: res.status,
+                body: body.slice(0, 300),
+            };
+        } catch (e) {
+            result.directProbe = { error: e instanceof Error ? e.message : 'fetch failed' };
+        }
     }
 
+    // supabase-js query
+    const supabase = getSupabase();
+    if (!supabase) {
+        result.query = 'skipped — client not configured';
+        return NextResponse.json(result);
+    }
     try {
-        const { data, error } = await supabase
-            .from('known_people')
-            .select('name');
-
-        if (error) {
-            result.query = { ok: false, error: error.message };
-        } else {
-            result.query = {
-                ok: true,
-                rowCount: data?.length ?? 0,
-                names: data?.map((r: { name: string }) => r.name) ?? [],
-            };
-        }
+        const { data, error } = await supabase.from('known_people').select('name');
+        result.query = error
+            ? { ok: false, error: error.message }
+            : { ok: true, rowCount: data?.length ?? 0, names: data?.map((r: { name: string }) => r.name) ?? [] };
     } catch (e) {
         result.query = { ok: false, error: e instanceof Error ? e.message : 'unknown error' };
     }
