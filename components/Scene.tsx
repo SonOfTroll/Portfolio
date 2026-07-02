@@ -308,13 +308,14 @@ function FloatingShards() {
    SCENE EXPORT — The 3D Engine
    Fixed background, z-index: -1, pointer-events: none
    ═══════════════════════════════════════════════ */
-export default function Scene({ activeProject }: { activeProject: string | null }) {
+export default function Scene({ activeProject, onReady }: { activeProject: string | null; onReady?: () => void }) {
     return (
         <Canvas
             camera={{ position: [0, 0, 10], fov: 55 }}
             dpr={[1, 1.5]}
             gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
             style={{ background: 'transparent' }}
+            onCreated={() => onReady?.()}
         >
             <Suspense fallback={null}>
                 {/* Lighting — cold, ethereal */}

@@ -276,6 +276,164 @@ body {
 }
 
 /* ═══════════════════════════════════════════════
+   PRELOADER — "Cryo-Core" boot sequence
+   Vector twin of the 3D icosahedron, then hands off
+   ═══════════════════════════════════════════════ */
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--void);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.preloader--exit {
+  pointer-events: none;
+  animation: preloader-out 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes preloader-out {
+  to {
+    opacity: 0;
+    transform: scale(1.08);
+    filter: blur(10px);
+  }
+}
+
+.preloader__glow {
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  max-width: 90vw;
+  max-height: 90vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--cyber-green-rgb), 0.16), transparent 62%);
+  filter: blur(24px);
+  animation: core-glow 3.2s ease-in-out infinite;
+}
+
+@keyframes core-glow {
+  0%, 100% { opacity: 0.35; transform: scale(0.95); }
+  50% { opacity: 0.7; transform: scale(1.06); }
+}
+
+.preloader__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+  width: min(340px, 78vw);
+}
+
+.preloader__core {
+  width: 150px;
+  height: 150px;
+  filter: drop-shadow(0 0 10px rgba(var(--cyber-green-rgb), 0.5));
+}
+
+.preloader__spin {
+  transform-origin: 50% 50%;
+  animation: core-spin 14s linear infinite;
+}
+
+@keyframes core-spin {
+  to { transform: rotate(360deg); }
+}
+
+.preloader__core .pc {
+  fill: none;
+  stroke: var(--cyber-green);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: core-draw 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes core-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.preloader__core .pc1 { opacity: 0.5; }
+.preloader__core .pc2 { animation-delay: 0.2s; }
+.preloader__core .pc3 { animation-delay: 0.35s; }
+.preloader__core .pc4 {
+  animation-delay: 0.55s;
+  fill: rgba(var(--cyber-green-rgb), 0.06);
+  stroke-width: 1.4;
+}
+
+.preloader__eyebrow {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.55em;
+  text-indent: 0.55em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.preloader__bar {
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.preloader__bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(var(--cyber-green-rgb), 0.35), var(--cyber-green));
+  box-shadow: 0 0 12px rgba(var(--cyber-green-rgb), 0.6);
+  transition: width 0.12s linear;
+}
+
+.preloader__meta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.68rem;
+}
+
+.preloader__status {
+  color: var(--cyber-green);
+  letter-spacing: 0.04em;
+}
+
+.preloader__cursor {
+  margin-left: 2px;
+  font-style: normal;
+  animation: blink-cursor 1s step-end infinite;
+}
+
+.preloader__pct {
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.12em;
+}
+
+/* Keep the wireframe fully visible if animations are disabled */
+@media (prefers-reduced-motion: reduce) {
+  .preloader__core .pc {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+  .preloader__spin,
+  .preloader__glow,
+  .preloader--exit {
+    animation: none !important;
+  }
+  .preloader--exit {
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════
    REDUCED MOTION — respect user OS preference
    ═══════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {

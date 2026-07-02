@@ -6,7 +6,7 @@ import gsap from 'gsap'
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*'
 const NAME = 'KISHAN PANDEY'
 
-export default function Hero() {
+export default function Hero({ start = true }: { start?: boolean }) {
     const titleRef = useRef<HTMLHeadingElement>(null)
     const subtextRef = useRef<HTMLParagraphElement>(null)
     const tiltRef = useRef<HTMLDivElement>(null)
@@ -36,8 +36,20 @@ export default function Hero() {
         return () => window.removeEventListener('mousemove', handleGlobalMouseMove)
     }, [])
 
+    // Scramble the name immediately so it reads as "encrypted" behind the preloader
     useEffect(() => {
         if (!titleRef.current) return
+        const chars = titleRef.current.querySelectorAll('.hero-char')
+        chars.forEach((char) => {
+            if ((char as HTMLElement).dataset.final !== ' ') {
+                char.textContent = CHARS[Math.floor(Math.random() * CHARS.length)]
+            }
+        })
+    }, [])
+
+    // Decrypt runs only once the preloader hands over (start === true)
+    useEffect(() => {
+        if (!start || !titleRef.current) return
 
         const chars = titleRef.current.querySelectorAll('.hero-char')
         const nameChars = NAME.split('')
@@ -46,14 +58,7 @@ export default function Hero() {
         const intervals: ReturnType<typeof setInterval>[] = []
         const timeouts: ReturnType<typeof setTimeout>[] = []
 
-        // Set initial random chars
-        chars.forEach((char) => {
-            if ((char as HTMLElement).dataset.final !== ' ') {
-                char.textContent = CHARS[Math.floor(Math.random() * CHARS.length)]
-            }
-        })
-
-        // Decrypt animation — each char resolves with a staggered start delay
+        // Re-scramble, then decrypt — each char resolves with a staggered start delay
         chars.forEach((char, i) => {
             const finalChar = nameChars[i]
             if (finalChar === ' ') return
@@ -90,7 +95,7 @@ export default function Hero() {
             intervals.forEach(clearInterval)
             timeouts.forEach(clearTimeout)
         }
-    }, [])
+    }, [start])
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[80vh] relative">
