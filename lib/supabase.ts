@@ -5,7 +5,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 // a double-slash in the request path ("Invalid path specified in request URL").
 const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '')
     .trim()
-    .replace(/\/+$/, '');
+    .replace(/\/+$/, '')          // drop trailing slash(es)
+    .replace(/\/rest\/v1$/, '');  // drop a mistakenly-included /rest/v1 path
 // Server-only SECRET key (sb_secret_... or legacy service_role). Never expose to the client.
 const SUPABASE_SERVICE_ROLE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
