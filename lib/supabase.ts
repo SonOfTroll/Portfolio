@@ -1,9 +1,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // The URL is not secret, so accept either name (ours or Supabase's default).
-const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Trim whitespace/newlines and strip any trailing slash — a trailing "/" causes
+// a double-slash in the request path ("Invalid path specified in request URL").
+const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '')
+    .trim()
+    .replace(/\/+$/, '');
 // Server-only SECRET key (sb_secret_... or legacy service_role). Never expose to the client.
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_SERVICE_ROLE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
 let client: SupabaseClient | null = null;
 
